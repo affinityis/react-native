@@ -22,6 +22,21 @@ public abstract class JSBundleLoader {
    * should be used. JS bundle will be read from assets directory in native code to save on passing
    * large strings from java to native memory.
    */
+  public static JSBundleLoader createFileLoader(
+      final String filePath) {
+    return new JSBundleLoader() {
+      @Override
+      public void loadScript(ReactBridge bridge) {
+        bridge.loadScriptFromFile(filePath);
+      }
+    };
+  }
+	
+	/**
+   * This loader is recommended one for release version of your app. In that case local JS executor
+   * should be used. JS bundle will be read from assets directory in native code to save on passing
+   * large strings from java to native memory.
+   */
   public static JSBundleLoader createAssetLoader(
       final AssetManager assetManager,
       final String assetFileName) {

@@ -18,6 +18,7 @@ import android.app.Application;
 import android.content.Context;
 import android.os.Bundle;
 import android.view.View;
+import android.util.Log;
 
 import com.facebook.common.logging.FLog;
 import com.facebook.infer.annotation.Assertions;
@@ -83,6 +84,7 @@ public class ReactInstanceManager {
   private @Nullable volatile ReactContext mCurrentReactContext;
   private final Context mApplicationContext;
   private @Nullable DefaultHardwareBackBtnHandler mDefaultBackButtonImpl;
+	private final boolean mUseResourceBundle;
 
   private final ReactInstanceDevCommandsHandler mDevInterface =
       new ReactInstanceDevCommandsHandler() {
@@ -118,8 +120,11 @@ public class ReactInstanceManager {
       List<ReactPackage> packages,
       boolean useDeveloperSupport,
       @Nullable NotThreadSafeBridgeIdleDebugListener bridgeIdleDebugListener,
-      LifecycleState initialLifecycleState) {
+      LifecycleState initialLifecycleState,
+	boolean useResourceBundle) {
     initializeSoLoaderIfNecessary(applicationContext);
+		
+		Log.d("AFFINITY!!!!!","WE HAVE ACCESS");
 
     mApplicationContext = applicationContext;
     mBundleAssetName = bundleAssetName;
@@ -137,6 +142,7 @@ public class ReactInstanceManager {
         useDeveloperSupport);
     mBridgeIdleDebugListener = bridgeIdleDebugListener;
     mLifecycleState = initialLifecycleState;
+		mUseResourceBundle = useResourceBundle;
   }
 
   public DevSupportManager getDevSupportManager() {
@@ -326,6 +332,12 @@ public class ReactInstanceManager {
         mDevSupportManager.handleReloadJS();
         return;
       }
+    } else if (mUseResourceBundle){
+			Log.v("AFFINITY!!!!!","RESOURCE BUNDLE");
+			recreateReactContext(
+			      new JSCJavaScriptExecutor(),
+			      JSBundleLoader.createFileLoader(mBundleAssetName));
+			return;
     }
     // Use JS file from assets
     recreateReactContext(
@@ -470,6 +482,7 @@ public class ReactInstanceManager {
     private @Nullable Application mApplication;
     private boolean mUseDeveloperSupport;
     private @Nullable LifecycleState mInitialLifecycleState;
+		private boolean mUseResourceBundle;
 
     private Builder() {
     }
@@ -533,6 +546,11 @@ public class ReactInstanceManager {
       mInitialLifecycleState = initialLifecycleState;
       return this;
     }
+		
+    public Builder setUseResourceBundle(boolean useResourceBundle) {
+      mUseResourceBundle = useResourceBundle;
+      return this;
+    }
 
     /**
      * Instantiates a new {@link ReactInstanceManager}.
@@ -558,7 +576,8 @@ public class ReactInstanceManager {
           mPackages,
           mUseDeveloperSupport,
           mBridgeIdleDebugListener,
-          Assertions.assertNotNull(mInitialLifecycleState, "Initial lifecycle state was not set"));
+          Assertions.assertNotNull(mInitialLifecycleState, "Initial lifecycle state was not set"),
+								mUseResourceBundle);
     }
   }
 }
